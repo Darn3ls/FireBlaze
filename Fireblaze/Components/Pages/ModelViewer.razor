@@ -1,0 +1,27 @@
+@page "/glb"
+@using HomagGroup.Blazor3D.Viewers
+@rendermode InteractiveServer
+
+<h3>Viewer 3D</h3>
+
+<div>
+  <p><button class="btn btn-primary" @onclick="OnLoadGltfButtonClick">Load Gltf</button> </p>
+</div>
+<div>
+  <Viewer UseDefaultScene="true" @ref="viewer" />
+</div>
+
+@code {
+  private Viewer? viewer;
+
+  private async Task OnLoadGltfButtonClick()
+    {
+        var settings = new ImportSettings
+            {
+                Format = Import3DFormats.Gltf,
+                FileURL = "/models/test.glb",
+            };
+        await viewer!.Import3DModelAsync(settings);
+        await viewer!.SetCameraPositionAsync(new Vector3(0, 1, 7), new Vector3(0, 0.5f, 0));
+    }
+}

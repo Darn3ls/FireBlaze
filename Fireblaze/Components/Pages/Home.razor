@@ -1,0 +1,34 @@
+﻿@page "/"
+@inject IFirebaseStorageService StorageService
+
+<PageTitle>Fireblaze</PageTitle>
+
+<h3>A Webapp to show 3D models runtime from Firebase Storage with Three.js</h3>
+
+@if (files == null)
+{
+    <p>Loading...</p>
+}
+else if (files.Count == 0)
+{
+    <p>File not found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var file in files)
+        {
+            <li>@file</li>
+        }
+    </ul>
+}
+
+
+@code {
+    private List<string>? files;
+
+    protected override async Task OnInitializedAsync()
+    {
+        files = await StorageService.ListFilesInExportedLayouts();
+    }
+}
