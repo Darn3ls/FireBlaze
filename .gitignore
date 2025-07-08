@@ -1,6 +1,8 @@
 # Exclude Firebase private key
 firebase-service-account.json
 
+#temp folder (used for downloading models)
+[Tt]emp
 
 # Specific to the EFCore-Blazor sample app
 *.db

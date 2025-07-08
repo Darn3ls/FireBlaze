@@ -29,4 +29,36 @@ public class FirebaseStorageService : IFirebaseStorageService
 
         return files;
     }
+
+    public async Task<string> DownloadGlbFromFirebaseAndSaveLocal(string remotePath, string originalFileName)
+    {
+        var folderPath = Path.Combine("wwwroot", "temp");
+        Directory.CreateDirectory(folderPath);
+
+        var safeFileName = originalFileName.Replace(" ", "_"); // sostituisci gli spazi!
+        var tempPath = Path.Combine(folderPath, safeFileName);
+
+        using var outputStream = File.Create(tempPath);
+        await _storageClient.DownloadObjectAsync(BucketName, remotePath, outputStream);
+
+        return $"/temp/{safeFileName}"; // <-- questo path funziona sempre
+    }
+
+
+    public async Task<List<string>> ListGlbFilesAsync(string prefix = "ExportedLayouts/")
+    {
+        var result = new List<string>();
+
+        await foreach (var obj in _storageClient.ListObjectsAsync(BucketName, prefix))
+        {
+            if (obj.Name.EndsWith(".glb", StringComparison.OrdinalIgnoreCase))
+            {
+                result.Add(obj.Name); // es: "ExportedLayouts/Test 123.glb"
+            }
+        }
+
+        return result;
+    }
+
+
 }

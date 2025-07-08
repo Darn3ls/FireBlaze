@@ -4,24 +4,68 @@
 
 <h3>Viewer 3D</h3>
 
-<div>
-  <p><button class="btn btn-primary" @onclick="OnLoadGltfButtonClick">Load Gltf</button> </p>
-</div>
+@if (glbFiles == null)
+{
+  <p>Caricamento lista file...</p>
+}
+else if (!glbFiles.Any())
+{
+  <p>Nessun file .glb trovato su Firebase.</p>
+}
+else
+{
+  <ul>
+    @foreach (var file in glbFiles)
+    {
+      <li>
+        <button @onclick="() => LoadGlbFromFirebase(file)">
+          @file
+        </button>
+      </li>
+    }
+  </ul>
+}
+
 <div>
   <Viewer UseDefaultScene="true" @ref="viewer" />
 </div>
 
 @code {
   private Viewer? viewer;
+  private List<string>? glbFiles;
 
-  private async Task OnLoadGltfButtonClick()
+  [Inject]
+  private FirebaseStorageService? FirebaseService { get; set; }
+
+  protected override async Task OnInitializedAsync()
+  {
+    // Recupera l’elenco dei file .glb
+    glbFiles = await FirebaseService!.ListGlbFilesAsync("ExportedLayouts/");
+  }
+
+  private async Task LoadGlbFromFirebase(string remotePath)
+  {
+    try
     {
-        var settings = new ImportSettings
-            {
-                Format = Import3DFormats.Gltf,
-                FileURL = "/models/test.glb",
-            };
-        await viewer!.Import3DModelAsync(settings);
-        await viewer!.SetCameraPositionAsync(new Vector3(0, 1, 7), new Vector3(0, 0.5f, 0));
+      var fileName = Path.GetFileName(remotePath);
+      var localUrl = await FirebaseService!.DownloadGlbFromFirebaseAndSaveLocal(remotePath, fileName);
+
+      var settings = new ImportSettings
+      {
+        Format = Import3DFormats.Gltf,
+        FileURL = localUrl
+      };
+      
+      await viewer!.UpdateScene();
+      await viewer!.Import3DModelAsync(settings);
+      await viewer!.UpdateScene();
+      await viewer!.SetCameraPositionAsync(new Vector3(-20, 10, -15), new Vector3(-20, 5f, 20));
+      
     }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"❌ Errore durante il caricamento del modello: {ex.Message}");
+    }
+  }
+
 }

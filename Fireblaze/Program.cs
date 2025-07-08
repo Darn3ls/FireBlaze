@@ -7,10 +7,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Blazor sa che ogni volta che qualcuno chiede un IFirebaseStorageService, deve usare una FirebaseStorageService
-builder.Services.AddSingleton<IFirebaseStorageService>(
-    new FirebaseStorageService(Path.Combine(AppContext.BaseDirectory, "firebase-service-account.json"))
-);
- 
+var service = new FirebaseStorageService(Path.Combine(AppContext.BaseDirectory, "firebase-service-account.json"));
+
+builder.Services.AddSingleton<IFirebaseStorageService>(service);
+builder.Services.AddSingleton<FirebaseStorageService>(service);
+
 // Utilizza la classe di Test
 //builder.Services.AddSingleton<IFirebaseStorageService, FirebaseStorageServiceTest>();
 
@@ -26,6 +27,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 
 app.UseAntiforgery();
 
