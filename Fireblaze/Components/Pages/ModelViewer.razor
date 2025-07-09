@@ -4,6 +4,13 @@
 
 <h3>Viewer 3D</h3>
 
+@if (isLoading)
+{
+    <div class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Caricamento modello...</p>
+    </div>
+}
 @if (glbFiles == null)
 {
   <p>Caricamento lista file...</p>
@@ -33,6 +40,7 @@ else
 @code {
   private Viewer? viewer;
   private List<string>? glbFiles;
+  private bool isLoading = false;
 
   [Inject]
   private FirebaseStorageService? FirebaseService { get; set; }
@@ -47,6 +55,9 @@ else
   {
     try
     {
+
+      isLoading = true;
+
       var fileName = Path.GetFileName(remotePath);
       var localUrl = await FirebaseService!.DownloadGlbFromFirebaseAndSaveLocal(remotePath, fileName);
 
@@ -65,6 +76,10 @@ else
     catch (Exception ex)
     {
       Console.WriteLine($"❌ Errore durante il caricamento del modello: {ex.Message}");
+    }
+    finally
+    {
+      isLoading = false;
     }
   }
 
