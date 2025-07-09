@@ -2,7 +2,7 @@
 firebase-service-account.json
 
 # Exclude API KEY
-wwwroot/firebase-init.js
+Fireblaze/wwwroot/firebase-init.js
 
 
 #temp folder (used for downloading models)
@@ -210,3 +210,4 @@ __pycache__/
 
 # Windows thumbnail cache files
 Thumbs.db
+
