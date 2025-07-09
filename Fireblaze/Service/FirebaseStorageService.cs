@@ -35,13 +35,22 @@ public class FirebaseStorageService : IFirebaseStorageService
         var folderPath = Path.Combine("wwwroot", "temp");
         Directory.CreateDirectory(folderPath);
 
-        var safeFileName = originalFileName.Replace(" ", "_"); // sostituisci gli spazi!
+        var safeFileName = originalFileName.Replace(" ", "_");
         var tempPath = Path.Combine(folderPath, safeFileName);
 
+        // ✅ Se esiste già, non riscaricare
+        if (File.Exists(tempPath))
+        {
+            Console.WriteLine($"⚠️ File già esistente: uso cache → {safeFileName}");
+            return $"/temp/{safeFileName}";
+        }
+
+        // Altrimenti scarica da Firebase
         using var outputStream = File.Create(tempPath);
         await _storageClient.DownloadObjectAsync(BucketName, remotePath, outputStream);
 
-        return $"/temp/{safeFileName}"; // <-- questo path funziona sempre
+        Console.WriteLine($"✅ File scaricato da Firebase: {safeFileName}");
+        return $"/temp/{safeFileName}";
     }
 
 

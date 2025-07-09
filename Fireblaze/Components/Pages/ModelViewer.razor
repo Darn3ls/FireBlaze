@@ -1,4 +1,3 @@
-@page "/glb"
 @using HomagGroup.Blazor3D.Viewers
 @rendermode InteractiveServer
 
@@ -24,7 +23,7 @@ else
   <ul>
     @foreach (var file in glbFiles)
     {
-      <li>
+      <li style="margin-bottom: 10px;">
         <button @onclick="() => LoadGlbFromFirebase(file)">
           @file
         </button>

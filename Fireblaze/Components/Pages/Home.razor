@@ -1,34 +1,63 @@
 ﻿@page "/"
-@inject IFirebaseStorageService StorageService
 
-<PageTitle>Fireblaze</PageTitle>
+@rendermode InteractiveServer
+@using Fireblaze.Components
+@inject IJSRuntime JS
 
-<h3>A Webapp to show 3D models runtime from Firebase Storage with Three.js</h3>
-
-@if (files == null)
+@if (!isAuthenticated)
 {
-    <p>Loading...</p>
-}
-else if (files.Count == 0)
-{
-    <p>File not found.</p>
+    <!-- Se utente NON autenticato, mostriamo il form di login -->
+    <LoginForm OnLoginSuccess="HandleLoginSuccess" />
 }
 else
 {
-    <ul>
-        @foreach (var file in files)
-        {
-            <li>@file</li>
-        }
-    </ul>
+    <!-- Se autenticato, mostriamo contenuto protetto -->
+    <h3>Benvenuto @userEmail</h3>
+
+    <div style="position: relative;">
+        <button @onclick="Logout" style="position: absolute; top: 0px; right: 5px;"> Logout </button>
+    </div>
+    
+    <!-- Viewer 3D -->
+    <ModelViewer />
 }
 
-
 @code {
-    private List<string>? files;
+    // Stato di autenticazione e info utente
+    private bool isAuthenticated;
+    private string? userEmail;
 
-    protected override async Task OnInitializedAsync()
+    // Questo metodo viene chiamato dopo il primo rendering
+    // per verificare se utente è già loggato tramite Firebase JS
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        files = await StorageService.ListFilesInExportedLayouts();
+        if (firstRender)
+        {
+            // Chiamata JS per controllare se l’utente è loggato
+            isAuthenticated = await JS.InvokeAsync<bool>("isUserLoggedIn");
+            if (isAuthenticated)
+            {
+                // Se loggato, prendi l’email per mostrare info utente
+                userEmail = await JS.InvokeAsync<string>("getUserEmail");
+                StateHasChanged(); // Aggiorna UI
+            }
+        }
+    }
+
+    // Logout: chiama JS per disconnettere Firebase
+    // e resetta stato per tornare alla pagina di login
+    private async Task Logout()
+    {
+        await JS.InvokeVoidAsync("firebaseLogout");
+        isAuthenticated = false;
+        userEmail = null;
+    }
+
+    // Questo metodo viene invocato dal LoginForm quando il login ha successo
+    private async Task HandleLoginSuccess()
+    {
+        isAuthenticated = true;
+        userEmail = await JS.InvokeAsync<string>("getUserEmail");
+        StateHasChanged();
     }
 }
