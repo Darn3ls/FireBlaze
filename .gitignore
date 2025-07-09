@@ -1,6 +1,10 @@
 # Exclude Firebase private key
 firebase-service-account.json
 
+# Exclude API KEY
+wwwroot/firebase-init.js
+
+
 #temp folder (used for downloading models)
 [Tt]emp
 
