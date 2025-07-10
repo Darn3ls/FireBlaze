@@ -38,20 +38,52 @@ public class FirebaseStorageService : IFirebaseStorageService
         var safeFileName = originalFileName.Replace(" ", "_");
         var tempPath = Path.Combine(folderPath, safeFileName);
 
-        // ✅ Se esiste già, non riscaricare
-        if (File.Exists(tempPath))
+        try
         {
-            Console.WriteLine($"⚠️ File già esistente: uso cache → {safeFileName}");
+            // Se il file esiste, controllo la dimensione
+            if (File.Exists(tempPath))
+            {
+                var fileInfo = new FileInfo(tempPath);
+                if (fileInfo.Length == 0)
+                {
+                    Console.WriteLine($"⚠️ File esistente ma vuoto. Elimino e riscarico: {safeFileName}");
+                    File.Delete(tempPath);
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ File già esistente e valido: uso cache → {safeFileName}");
+                    return $"/temp/{safeFileName}";
+                }
+            }
+
+            // Scarica il file da Firebase
+            using var outputStream = File.Create(tempPath);
+            await _storageClient.DownloadObjectAsync(BucketName, remotePath, outputStream);
+
+            // Verifica che il file scaricato non sia vuoto
+            var downloadedFileInfo = new FileInfo(tempPath);
+            if (downloadedFileInfo.Length == 0)
+            {
+                File.Delete(tempPath);
+                throw new Exception($"Il file scaricato è vuoto: {safeFileName}");
+            }
+
+            Console.WriteLine($"✅ File scaricato da Firebase: {safeFileName}");
             return $"/temp/{safeFileName}";
         }
-
-        // Altrimenti scarica da Firebase
-        using var outputStream = File.Create(tempPath);
-        await _storageClient.DownloadObjectAsync(BucketName, remotePath, outputStream);
-
-        Console.WriteLine($"✅ File scaricato da Firebase: {safeFileName}");
-        return $"/temp/{safeFileName}";
+        catch (Google.GoogleApiException gex)
+        {
+            Console.WriteLine($"❌ Google API error durante download file '{safeFileName}': {gex.Message}");
+            // eventualmente puoi loggare anche gex.Error?.Message o gex.Error?.Code
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Errore generico durante download file '{safeFileName}': {ex.Message}");
+            throw;
+        }
     }
+
 
 
     public async Task<List<string>> ListGlbFilesAsync(string prefix = "ExportedLayouts/")
@@ -62,8 +94,7 @@ public class FirebaseStorageService : IFirebaseStorageService
         {
             if (obj.Name.EndsWith(".glb", StringComparison.OrdinalIgnoreCase))
             {
-                var fileName = obj.Name.Split('/').Last();
-                result.Add(fileName); // es: "Test 123.glb"
+                result.Add(obj.Name);
             }
         }
 

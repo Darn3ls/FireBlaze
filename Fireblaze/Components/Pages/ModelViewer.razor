@@ -28,16 +28,16 @@ else
         @if (glbFiles != null && glbFiles.Any())
         {
           <ul class="list-group">
-            @foreach (var file in glbFiles)
-            {
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span class="text-truncate">@file</span>
-                <button @onclick="() => LoadGlbFromFirebase(file)" class="btn btn-sm btn-primary">
-                  <i class="bi bi-cloud-download me-1"></i> Carica
-                </button>
-              </li>
-            }
-          </ul>
+    @foreach (var file in glbFiles)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-truncate">@System.IO.Path.GetFileName(file)</span>
+            <button @onclick="() => LoadGlbFromFirebase(file)" class="btn btn-sm btn-primary">
+                <i class="bi bi-cloud-download me-1"></i> Carica
+            </button>
+        </li>
+    }
+</ul>
         }
       </div>
 
@@ -64,10 +64,10 @@ else
   protected override async Task OnInitializedAsync()
   {
     scene.Add(new AmbientLight());
-        scene.Add(new PointLight()
-            {
-                Position = new Vector3(1, 3, 0)
-            });
+    scene.Add(new PointLight()
+    {
+      Position = new Vector3(1, 3, 0)
+    });
     // Recupera l’elenco dei file .glb
     glbFiles = await FirebaseService!.ListGlbFilesAsync("ExportedLayouts/");
   }
@@ -76,7 +76,6 @@ else
   {
     try
     {
-
       isLoading = true;
 
       var fileName = Path.GetFileName(remotePath);
