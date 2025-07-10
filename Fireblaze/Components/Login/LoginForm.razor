@@ -1,0 +1,57 @@
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow p-4 text-white" style="min-width: 350px; max-width: 400px; background-color: #696969;">
+        <div class="text-center mb-4">
+            <img src="images/logoapp.png" alt="Logo App" style="width: 120px;" class="mb-3" />
+            <h4 class="fw-bold">Accedi</h4>
+        </div>
+
+        <div class="mb-3">
+            <label for="emailInput" class="form-label">Email</label>
+            <input @bind="email" id="emailInput" class="form-control" placeholder="Email" />
+        </div>
+
+        <div class="mb-3">
+            <label for="passwordInput" class="form-label">Password</label>
+            <input @bind="password" id="passwordInput" class="form-control" type="password" placeholder="Password" />
+        </div>
+
+        <button class="btn btn-primary w-100 mb-2" @onclick="LoginAsync">Login</button>
+
+        @if (!string.IsNullOrEmpty(status))
+        {
+            <div class="alert alert-info text-center mt-2 p-2" role="alert">
+                @status
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string email = "";
+    private string password = "";
+    private string status = "";
+
+    [Parameter]
+    public EventCallback OnLoginSuccess { get; set; }
+
+    private async Task LoginAsync()
+    {
+        status = "Login in corso...";
+        StateHasChanged();
+
+        var result = await JS.InvokeAsync<string>("firebaseLogin", email, password);
+
+        if (result.StartsWith("ERROR"))
+        {
+            status = $"Errore login: {result.Replace("ERROR:", "")}";
+        }
+        else
+        {
+            status = "Login riuscito!";
+            await OnLoginSuccess.InvokeAsync();
+        }
+    }
+}

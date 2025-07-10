@@ -62,7 +62,8 @@ public class FirebaseStorageService : IFirebaseStorageService
         {
             if (obj.Name.EndsWith(".glb", StringComparison.OrdinalIgnoreCase))
             {
-                result.Add(obj.Name); // es: "ExportedLayouts/Test 123.glb"
+                var fileName = obj.Name.Split('/').Last();
+                result.Add(fileName); // es: "Test 123.glb"
             }
         }
 

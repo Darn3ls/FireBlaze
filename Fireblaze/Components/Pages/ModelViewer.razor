@@ -5,10 +5,10 @@
 
 @if (isLoading)
 {
-    <div class="loading-overlay">
-        <div class="spinner"></div>
-        <p>Caricamento modello...</p>
-    </div>
+  <div class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Caricamento modello...</p>
+  </div>
 }
 @if (glbFiles == null)
 {
@@ -20,32 +20,54 @@ else if (!glbFiles.Any())
 }
 else
 {
-  <ul>
-    @foreach (var file in glbFiles)
-    {
-      <li style="margin-bottom: 10px;">
-        <button @onclick="() => LoadGlbFromFirebase(file)">
-          @file
-        </button>
-      </li>
-    }
-  </ul>
-}
+  <div class="container-fluid" style="height: 70vh; overflow: hidden;">
+    <div class="row h-100">
 
-<div>
-  <Viewer UseDefaultScene="true" @ref="viewer" />
-</div>
+      <!-- Colonna Lista -->
+      <div class="col-12 col-md-4" style="overflow-y: auto; max-height: 100%; padding-right: 10px;">
+        @if (glbFiles != null && glbFiles.Any())
+        {
+          <ul class="list-group">
+            @foreach (var file in glbFiles)
+            {
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="text-truncate">@file</span>
+                <button @onclick="() => LoadGlbFromFirebase(file)" class="btn btn-sm btn-primary">
+                  <i class="bi bi-cloud-download me-1"></i> Carica
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- Colonna Viewer -->
+      <div class="col-12 col-md-8" style="height: 100%;">
+        <div style="width: 100%; height: 100%;">
+          <Viewer Scene="scene" @ref="viewer" />
+        </div>
+      </div>
+    </div>
+  </div>
+}
 
 @code {
   private Viewer? viewer;
   private List<string>? glbFiles;
   private bool isLoading = false;
 
+  Scene scene = new Scene();
+
   [Inject]
   private FirebaseStorageService? FirebaseService { get; set; }
 
   protected override async Task OnInitializedAsync()
   {
+    scene.Add(new AmbientLight());
+        scene.Add(new PointLight()
+            {
+                Position = new Vector3(1, 3, 0)
+            });
     // Recupera l’elenco dei file .glb
     glbFiles = await FirebaseService!.ListGlbFilesAsync("ExportedLayouts/");
   }
@@ -65,12 +87,12 @@ else
         Format = Import3DFormats.Gltf,
         FileURL = localUrl
       };
-      
+
       await viewer!.UpdateScene();
       await viewer!.Import3DModelAsync(settings);
       await viewer!.UpdateScene();
       await viewer!.SetCameraPositionAsync(new Vector3(-20, 10, -15), new Vector3(-20, 5f, 20));
-      
+
     }
     catch (Exception ex)
     {
